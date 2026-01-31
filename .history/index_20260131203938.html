@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global Explorer | Atlas des Nations</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body>
+    <header class="header">
+      <div class="container header-inner">
+        <div class="logo">
+          <i class="fas fa-globe-americas"></i>
+          <h1>Global<span>Explorer</span></h1>
+        </div>
+
+        <div class="header-right">
+          <div class="header-info">
+            <p>
+              <i class="fas fa-chart-line"></i> Explorez
+              <span id="totalCountries">0</span> pays
+            </p>
+          </div>
+
+          <button
+            class="fav-toggle"
+            id="favToggle"
+            title="Afficher les favoris"
+          >
+            <i class="fas fa-star"></i>
+            <span>Favoris</span>
+            <span class="badge" id="favCount">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <div class="hero-section">
+        <div class="container">
+          <h2>
+            <i class="fas fa-map-marked-alt"></i> Atlas Mondial Interactif
+          </h2>
+          <p>
+            Découvrez les pays du monde avec des données actualisées (et un mode
+            premium qui claque).
+          </p>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="dashboard">
+          <div class="filter-panel">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                id="inputSearch"
+                placeholder="Rechercher un pays..."
+              />
+              <div class="search-tips">
+                <small>Essayez "France", "Japan", "Brazil"</small>
+              </div>
+            </div>
+
+            <div class="control-grid">
+              <div class="control-group">
+                <label for="inputRange">
+                  <i class="fas fa-list-ol"></i>
+                  Nombre de pays affichés : <span id="rangeValue">24</span>
+                </label>
+
+                <div class="range-wrapper">
+                  <input
+                    type="range"
+                    value="24"
+                    min="1"
+                    max="250"
+                    id="inputRange"
+                  />
+                  <div class="range-labels">
+                    <span>1</span>
+                    <span>250</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label><i class="fas fa-sort"></i> Trier par :</label>
+                <div class="sort-buttons">
+                  <button class="btnSort active" id="maxToMin">
+                    <i class="fas fa-sort-amount-down"></i>
+                    <span>Population</span>
+                  </button>
+                  <button class="btnSort" id="minToMax">
+                    <i class="fas fa-sort-amount-up"></i>
+                    <span>Population</span>
+                  </button>
+                  <button class="btnSort" id="alpha">
+                    <i class="fas fa-sort-alpha-down"></i>
+                    <span>A-Z</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="stats">
+                <div class="stat-item">
+                  <i class="fas fa-users"></i>
+                  <div>
+                    <h4>Population totale</h4>
+                    <p id="totalPopulation">0</p>
+                  </div>
+                </div>
+
+                <div class="stat-item">
+                  <i class="fas fa-star"></i>
+                  <div>
+                    <h4>Mode favoris</h4>
+                    <p id="favModeLabel">Désactivé</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="results-header">
+            <h3>
+              <i class="fas fa-flag"></i> Résultats (<span id="resultsCount"
+                >0</span
+              >)
+            </h3>
+
+            <div class="view-toggle">
+              <button class="view-btn active" id="gridView" title="Grille">
+                <i class="fas fa-th"></i>
+              </button>
+              <button class="view-btn" id="listView" title="Liste">
+                <i class="fas fa-list"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="countries-container grid-view"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>
+          © 2024 GlobalExplorer - Atlas des Nations. Données fournies par
+          <a href="https://restcountries.com" target="_blank" rel="noreferrer"
+            >REST Countries API</a
+          >
+        </p>
+        <p class="footer-info">
+          <i class="fas fa-sync-alt"></i> Dernière mise à jour :
+          <span id="lastUpdate">--</span>
+        </p>
+      </div>
+    </footer>
+
+    <div class="loading-overlay" id="loading">
+      <div class="loader">
+        <div class="earth"></div>
+        <p>Chargement des données mondiales...</p>
+      </div>
+    </div>
+
+    <!-- Drawer premium -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <aside class="country-drawer" id="countryDrawer" aria-hidden="true">
+      <button class="drawer-close" id="drawerClose" aria-label="Fermer">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="drawer-content" id="drawerContent"></div>
+    </aside>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
