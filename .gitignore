@@ -14,3 +14,7 @@ pnpm-debug.log*
 
 # OS
 .DS_Store
+
+.history/
+.DS_Store
+node_modules/

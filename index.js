@@ -1,6 +1,7 @@
 // ============================================
 // GLOBAL EXPLORER PREMIUM - Application Main
 // ============================================
+const API_BASE = "https://globalexplorer-proxy.onrender.com";
 
 class GlobalExplorer {
   constructor() {
@@ -9,6 +10,9 @@ class GlobalExplorer {
     this.favorites = new Set();
     this.regions = new Set();
     this.subregions = new Set();
+
+    this.countryDetailsCache = new Map();
+    this.detailsAbortController = null;
 
     // Configuration
     this.config = {
@@ -189,7 +193,7 @@ class GlobalExplorer {
     this.showLoading();
 
     try {
-      const response = await fetch("http://localhost:5050/api/countries");
+      const response = await fetch(`${API_BASE}/api/countries`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const parsed = await response.json();
@@ -202,7 +206,7 @@ class GlobalExplorer {
       this.countries = parsed;
 
       this.extractRegions();
-      this.updateFilters(); // ✅ important pour remplir les selects
+      this.updateFilters();
       this.updateStatistics();
       this.saveUpdateTime();
 
@@ -468,24 +472,58 @@ class GlobalExplorer {
 
   // ===== DÉTAILS DU PAYS =====
   async showCountryDetails(code) {
-    this.showLoading();
+    // Ouvre direct le drawer (UX premium) + petit "chargement"
+    this.openDrawer();
+    this.elements.drawer.content.innerHTML = `
+    <div style="padding:20px">
+      <p style="opacity:.8;margin:0 0 10px">Chargement des détails…</p>
+      <div style="height:10px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden">
+        <div style="width:55%;height:100%;background:rgba(0,0,0,.12)"></div>
+      </div>
+    </div>
+  `;
+
+    // Annule la requête précédente si l’utilisateur clique vite
+    if (this.detailsAbortController) this.detailsAbortController.abort();
+    this.detailsAbortController = new AbortController();
 
     try {
-      const proxyUrl = "https://api.allorigins.win/get?url=";
-      const apiUrl = `https://restcountries.com/v3.1/alpha/${code}`;
-      const encodedUrl = encodeURIComponent(apiUrl);
+      // ✅ Cache
+      if (this.countryDetailsCache.has(code)) {
+        this.renderCountryDetails(this.countryDetailsCache.get(code));
+        return;
+      }
 
-      const response = await fetch(`${proxyUrl}${encodedUrl}`);
-      const data = await response.json();
-      const country = JSON.parse(data.contents)[0];
+      // ✅ Ton proxy (local ou Render)
+      const response = await fetch(`${API_BASE}/api/countries/${code}`, {
+        signal: this.detailsAbortController.signal,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
+      const country = await response.json();
+
+      // Cache + rendu
+      this.countryDetailsCache.set(code, country);
       this.renderCountryDetails(country);
-      this.openDrawer();
     } catch (error) {
+      if (error.name === "AbortError") return;
+
       console.error("Erreur lors du chargement des détails:", error);
       this.showToast("Impossible de charger les détails", "error");
-    } finally {
-      this.hideLoading();
+
+      this.elements.drawer.content.innerHTML = `
+      <div style="padding:20px">
+        <h4 style="margin:0 0 6px">Oups 😅</h4>
+        <p style="margin:0 0 14px;opacity:.85">Impossible de charger les détails pour l’instant.</p>
+        <button class="action-btn primary" id="retryDetails" style="width:100%">
+          Réessayer
+        </button>
+      </div>
+    `;
+
+      document.getElementById("retryDetails")?.addEventListener("click", () => {
+        this.showCountryDetails(code);
+      });
     }
   }
 
