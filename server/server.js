@@ -11,7 +11,11 @@ const PORT = process.env.PORT || 5050;
    ROUTE RACINE
 ============================== */
 app.get("/", (req, res) => {
-  res.send("✅ GlobalExplorer Proxy is running. Use /api/countries");
+  res
+    .type("text")
+    .send(
+      "✅ GlobalExplorer Proxy OK\n\nEndpoints:\n- GET /api/countries\n- GET /api/countries/:code\n"
+    );
 });
 
 /* ==============================

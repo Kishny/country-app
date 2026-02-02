@@ -1,7 +1,11 @@
 // ============================================
 // GLOBAL EXPLORER PREMIUM - Application Main
 // ============================================
-const API_BASE = "https://globalexplorer-proxy.onrender.com";
+const API_BASE =
+  location.hostname.includes("localhost") ||
+  location.hostname.includes("127.0.0.1")
+    ? "http://localhost:5050"
+    : "https://globalexplorer-proxy.onrender.com";
 
 class GlobalExplorer {
   constructor() {
