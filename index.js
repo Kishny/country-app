@@ -1,11 +1,12 @@
 // ============================================
 // GLOBAL EXPLORER PREMIUM - Application Main
 // ============================================
+import { FALLBACK_COUNTRIES } from "./fallback-data.js";
+
 const API_BASE =
-  location.hostname.includes("localhost") ||
-  location.hostname.includes("127.0.0.1")
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
     ? "http://localhost:5050"
-    : "https://globalexplorer-proxy.onrender.com";
+    : "";
 
 class GlobalExplorer {
   constructor() {
@@ -111,6 +112,7 @@ class GlobalExplorer {
     );
     this.elements.searchClear.addEventListener("click", () => {
       this.elements.inputSearch.value = "";
+      this.config.currentPage = 1;
       this.renderCountries();
     });
 
@@ -188,7 +190,26 @@ class GlobalExplorer {
 
     // Touches clavier
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") this.closeDrawer();
+      if (e.key === "Escape") {
+        this.closeDrawer();
+        document.getElementById("exportModal").classList.remove("active");
+      }
+    });
+
+    // Modal export
+    const modal = document.getElementById("exportModal");
+    modal.querySelector(".modal-close").addEventListener("click", () => {
+      modal.classList.remove("active");
+    });
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("active");
+    });
+    modal.querySelectorAll(".export-option").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const format = e.currentTarget.dataset.format;
+        this.exportData(format);
+        modal.classList.remove("active");
+      });
     });
   }
 
@@ -333,9 +354,6 @@ class GlobalExplorer {
     const startIndex = (this.config.currentPage - 1) * this.config.itemsPerPage;
     const endIndex = startIndex + this.config.itemsPerPage;
     const countriesToShow = this.filteredCountries.slice(startIndex, endIndex);
-    this.elements.visibleCount.textContent = this.formatNumber(
-      countriesToShow.length
-    );
 
     // Mise à jour des statistiques
     this.updateDisplayStats();
@@ -797,26 +815,7 @@ class GlobalExplorer {
 
   // ===== EXPORT =====
   showExportModal() {
-    // Implémentation simplifiée - à étendre avec une librairie d'export
-    const exportData = {
-      countries: this.filteredCountries.length,
-      favorites: this.favorites.size,
-      timestamp: new Date().toISOString(),
-    };
-
-    const modal = document.getElementById("exportModal");
-    modal.classList.add("active");
-
-    modal.querySelector(".modal-close").addEventListener("click", () => {
-      modal.classList.remove("active");
-    });
-
-    modal.querySelectorAll(".export-option").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const format = e.currentTarget.dataset.format;
-        this.exportData(format);
-      });
-    });
+    document.getElementById("exportModal").classList.add("active");
   }
 
   exportData(format) {
@@ -956,26 +955,7 @@ class GlobalExplorer {
 
   // ===== DONNÉES DE SECOURS =====
   async loadFallbackData() {
-    // Données de secours pour 20 pays majeurs
-    const fallbackCountries = [
-      {
-        cca3: "FRA",
-        name: { common: "France" },
-        translations: { fra: { common: "France" } },
-        capital: ["Paris"],
-        region: "Europe",
-        subregion: "Western Europe",
-        population: 67391582,
-        area: 551695,
-        flags: {
-          png: "https://flagcdn.com/w320/fr.png",
-          svg: "https://flagcdn.com/fr.svg",
-        },
-      },
-      // Ajouter d'autres pays de secours...
-    ];
-
-    this.countries = fallbackCountries;
+    this.countries = FALLBACK_COUNTRIES;
     this.extractRegions();
     this.updateStatistics();
     this.showToast("Données de secours chargées", "warning");
